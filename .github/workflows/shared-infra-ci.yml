@@ -1,0 +1,81 @@
+name: shared-infra-ci
+
+# Validates the shared WireMock sandbox definitions in `test-infra/`
+# whenever anything in the shared test infrastructure changes, or when
+# a top-level repo file (LICENSE, README, contributing policy) is
+# touched. The WireMock JSON mappings themselves get their JSON syntax
+# checked here — a malformed mapping file would silently break every
+# downstream provider's containerized test, so catching it at PR time
+# saves a lot of debugging in language-specific pipelines.
+#
+# This job does NOT run any provider-specific test suites. It only
+# validates the shared infra is intact so the per-provider workflows
+# can rely on it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'test-infra/**'
+      - '.github/workflows/shared-infra-ci.yml'
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+  pull_request:
+    paths:
+      - 'test-infra/**'
+      - '.github/workflows/shared-infra-ci.yml'
+      - 'README.md'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+
+jobs:
+  validate-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate WireMock mapping JSON
+        # Every .json under test-infra/ that isn't a top-level manifest
+        # should be a valid WireMock stub. jq is available on the
+        # ubuntu-latest runner.
+        run: |
+          set -euo pipefail
+          # Find every mapping JSON file and pipe through jq to verify
+          # it parses. Find ignores vendor dirs that may be vendored
+          # later by a phase (none today).
+          shopt -s globstar nullglob
+          failed=0
+          for f in test-infra/**/*.json; do
+            if ! jq empty "$f" >/dev/null 2>&1; then
+              echo "::error file=$f::JSON parse failed"
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more JSON files failed to parse."
+            exit 1
+          fi
+          echo "All JSON files under test-infra/ parse cleanly."
+
+      - name: Validate Docker Compose files
+        # The shared `test-infra/docker-compose.yml` (when added) must
+        # parse. This catches YAML typos before they break every
+        # provider pipeline.
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          found=0
+          for f in test-infra/**/docker-compose*.yml test-infra/**/docker-compose*.yaml; do
+            [ -f "$f" ] || continue
+            found=1
+            # docker compose config validates + renders the file.
+            docker compose -f "$f" config >/dev/null
+            echo "OK: $f"
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No docker-compose files in test-infra/ yet (expected during Phase 0; the per-provider compose files in <provider>/docker-compose.test.yml are wired up by their owning phase)."
+          fi

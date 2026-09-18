@@ -1,0 +1,35 @@
+name: python-ci
+
+# Python SDK test pipeline. Filled in during Phase 3.
+#
+# Canonical local invocation (per SOW §2.6):
+#   docker compose -f python/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from python-tests
+#   docker compose -f python/docker-compose.test.yml down -v
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'python/**'
+      - 'test-infra/**'
+      - '.github/workflows/python-ci.yml'
+  pull_request:
+    paths:
+      - 'python/**'
+      - 'test-infra/**'
+      - '.github/workflows/python-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build + run Python test stack
+        run: |
+          docker compose -f python/docker-compose.test.yml up \
+            --build --abort-on-container-exit --exit-code-from python-tests
+      - name: Tear down Python stack
+        if: always()
+        run: docker compose -f python/docker-compose.test.yml down -v

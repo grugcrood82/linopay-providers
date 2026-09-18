@@ -1,0 +1,40 @@
+name: cli-ci
+
+# CLI test pipeline. Re-uses the Node.js test stack (CLI is built on
+# top of node/) but exposes a separate `cli-tests` exit-code service so
+# `cli/` can carry its own containerized test suite without coupling
+# the release pipelines.
+#
+# Canonical local invocation (per SOW §2.6):
+#   docker compose -f cli/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from cli-tests
+#   docker compose -f cli/docker-compose.test.yml down -v
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cli/**'
+      - 'node/**'
+      - 'test-infra/**'
+      - '.github/workflows/cli-ci.yml'
+  pull_request:
+    paths:
+      - 'cli/**'
+      - 'node/**'
+      - 'test-infra/**'
+      - '.github/workflows/cli-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build + run containerized test stack
+        run: |
+          docker compose -f cli/docker-compose.test.yml up \
+            --build --abort-on-container-exit --exit-code-from cli-tests
+      - name: Tear down test stack
+        if: always()
+        run: docker compose -f cli/docker-compose.test.yml down -v

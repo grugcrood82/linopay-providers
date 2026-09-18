@@ -1,0 +1,35 @@
+name: dotnet-ci
+
+# .NET SDK test pipeline. Filled in during Phase 4.
+#
+# Canonical local invocation (per SOW §2.6):
+#   docker compose -f dotnet/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from dotnet-tests
+#   docker compose -f dotnet/docker-compose.test.yml down -v
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dotnet/**'
+      - 'test-infra/**'
+      - '.github/workflows/dotnet-ci.yml'
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - 'test-infra/**'
+      - '.github/workflows/dotnet-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build + run .NET test stack
+        run: |
+          docker compose -f dotnet/docker-compose.test.yml up \
+            --build --abort-on-container-exit --exit-code-from dotnet-tests
+      - name: Tear down .NET stack
+        if: always()
+        run: docker compose -f dotnet/docker-compose.test.yml down -v
