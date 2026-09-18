@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.log
+.env
+.env.local
+coverage/
+
+# Don't accidentally ship the host SSH keys or WireMock state
+.ssh/
+.wiremock/
+
+# The PNZ Postman artefacts (collection + env files, including one
+# with an RSA dev PEM) are a contract guard rail for the C# client in
+# the upstream `lime-payments` repo. They aren't needed by the public
+# SDKs/CLI in this repo -- those talk to LinoPay's own API surface,
+# mocked separately under wiremock/linopay/. Carrying them forward
+# here would mean publishing a fixture PEM on a public repo.
+test-infra/wiremock/pnz/postman/

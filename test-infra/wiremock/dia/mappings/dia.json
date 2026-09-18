@@ -1,0 +1,20 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "urlPattern": "/nzbn/v5/entities/.*"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "nzbn": "9429042904234",
+          "entityName": "ACME LIMITED",
+          "entityStatusCode": "50",
+          "entityStatusDescription": "Registered"
+        }
+      }
+    }
+  ]
+}

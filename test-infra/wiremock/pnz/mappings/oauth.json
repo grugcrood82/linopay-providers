@@ -1,0 +1,73 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/oauth/v2\\.0/introspect"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "active": true,
+          "scope": "openid accounts payments",
+          "client_id": "linopay-dev-client",
+          "token_type": "Bearer",
+          "exp": "{{now offset='1 hour' format='X'}}",
+          "iat": "{{now format='X'}}",
+          "sub": "wire_sub_{{randomValue length=20 type='ALPHANUMERIC'}}",
+          "iss": "http://localhost:8081/"
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/oauth/v2\\.0/userinfo"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "iss": "http://localhost:8081/",
+          "sub": "wire_sub_{{randomValue length=20 type='ALPHANUMERIC'}}",
+          "https://www.apicentre.paymentsnz.co.nz/refresh_token_expires_at": "{{now offset='1 day' format='X'}}"
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/oauth/v2\\.0/revoke"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/oauth/v2.0/keys"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "keys": [
+            {
+              "kid": "wire_jwk_ps512",
+              "kty": "RSA",
+              "alg": "PS512",
+              "use": "sig",
+              "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86z",
+              "e": "AQAB"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

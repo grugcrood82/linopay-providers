@@ -1,0 +1,205 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/v1/auth/channel-token",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" },
+          "X-Channel-KeyId": { "matches": ".+" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "accessToken": "wire_cat_{{randomValue length=48 type='ALPHANUMERIC'}}",
+            "expiresIn": 300,
+            "merchantId": "wire_merchant_test",
+            "channelId": "wire_channel_test",
+            "scope": ["invoices:read", "invoices:write"]
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 2,
+      "request": {
+        "method": "POST",
+        "urlPath": "/v1/payments/qrcode",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" },
+          "X-Channel-KeyId": { "matches": ".+" }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "transactionSagaId": "wire_saga_{{randomValue length=20 type='ALPHANUMERIC'}}",
+          "qrCodeImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+          "consentUrl": "{{request.scheme}}://{{request.host}}/mock/pnz/oauth/v2.0/authorize?response_type=code%20id_token&client_id=wire&request_uri=urn:wire:saga:stub",
+          "status": "Pending"
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 3,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/v1/payments/transactions/[^/]+/channel-status",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "transactionSagaId": "{{request.pathSegments.[3]}}",
+            "status": "AcceptedSettlementCompleted",
+            "amount": 1.99,
+            "currency": "NZD"
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 4,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/api/merchants/[^/]+/channels/[^/]+/invoices",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "invoiceId": "wire_inv_{{randomValue length=20 type='ALPHANUMERIC'}}",
+            "invoiceCode": "WIRE-INV-{{randomValue length=8 type='ALPHANUMERIC'}}",
+            "amount": 10.00,
+            "currency": "NZD",
+            "reference": "ref:wiremock",
+            "status": "Outstanding",
+            "dueAt": "{{now offset='14 days'}}",
+            "expiresAt": "{{now offset='14 days'}}",
+            "paymentWindowDays": 14,
+            "qrCodeUrl": "{{request.scheme}}://{{request.host}}/v1/invoice/WIRE-INV-STUB",
+            "qrCodeImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 5,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/api/merchants/[^/]+/invoices/[^/]+",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "invoiceId": "{{request.pathSegments.[4]}}",
+            "invoiceCode": "WIRE-INV-{{randomValue length=8 type='ALPHANUMERIC'}}",
+            "amount": 10.00,
+            "currency": "NZD",
+            "reference": "ref:wiremock",
+            "status": "Outstanding",
+            "dueAt": "{{now offset='14 days'}}",
+            "expiresAt": "{{now offset='14 days'}}",
+            "paymentWindowDays": 14,
+            "qrCodeUrl": "{{request.scheme}}://{{request.host}}/v1/invoice/WIRE-INV-STUB",
+            "qrCodeImage": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 6,
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/api/merchants/[^/]+/invoices/[^/]+/cancel",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": {
+            "invoiceId": "{{request.pathSegments.[4]}}",
+            "invoiceCode": "WIRE-INV-{{randomValue length=8 type='ALPHANUMERIC'}}",
+            "status": "Cancelled",
+            "cancelledAt": "{{now}}"
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 7,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/api/merchants/[^/]+/channels/[^/]+/keys"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "data": [
+            {
+              "id": 1,
+              "keyId": "wire_kid_{{randomValue length=12 type='ALPHANUMERIC'}}",
+              "status": "ACTIVE",
+              "activatedAt": "{{now offset='-30 days'}}",
+              "expiresAt": "{{now offset='12 days'}}",
+              "isPassphraseProtected": false,
+              "fingerprint": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+              "effectiveStatus": "Active"
+            },
+            {
+              "id": 2,
+              "keyId": "wire_kid_PREVIOUS",
+              "status": "REVOKED",
+              "activatedAt": "{{now offset='-180 days'}}",
+              "expiresAt": "{{now offset='-30 days'}}",
+              "isPassphraseProtected": false,
+              "fingerprint": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+              "effectiveStatus": "Revoked"
+            }
+          ]
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "priority": 99,
+      "request": {
+        "method": "ANY",
+        "urlPathPattern": "/healthz"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "text/plain" },
+        "body": "ok"
+      }
+    }
+  ]
+}

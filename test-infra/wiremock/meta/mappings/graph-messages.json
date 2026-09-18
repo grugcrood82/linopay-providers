@@ -1,0 +1,48 @@
+{
+  "mappings": [
+    {
+      "priority": 5,
+      "request": {
+        "method": "POST",
+        "urlPattern": "/v21\\.0/[^/]+/messages",
+        "headers": {
+          "Authorization": { "matches": "Bearer .+" }
+        },
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.messaging_product" },
+          { "matchesJsonPath": "$.template.name" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "messaging_product": "whatsapp",
+          "contacts": [{ "input": "+64211234567", "wa_id": "64211234567" }],
+          "messages": [{ "id": "wamid.WIREMOCK_STUB_MESSAGE_ID" }]
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPattern": "/v21\\.0/[^/]+/messages",
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.template.name", "equalTo": "not_a_real_template" }
+        ]
+      },
+      "response": {
+        "status": 400,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "error": {
+            "message": "(#132001) Template name does not exist in the translation",
+            "type": "OAuthException",
+            "code": 132001
+          }
+        }
+      }
+    }
+  ]
+}

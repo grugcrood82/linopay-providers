@@ -1,0 +1,115 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/accounts"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "Account": [
+              {
+                "AccountId": "OBA-99-1348-3607054-00",
+                "Currency": "NZD",
+                "Nickname": "Cheque Account",
+                "Description": "Cheque Account",
+                "AccountType": "Business",
+                "AccountSubType": "Savings",
+                "Account": [
+                  {
+                    "SchemeName": "BECSElectronicCredit",
+                    "Identification": "99-1348-3607054-00",
+                    "Name": "CurrentAccount",
+                    "SecondaryIdentification": "ID2-99-1348-3607054-00"
+                  }
+                ]
+              }
+            ]
+          },
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": { "TotalPages": 1 }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/accounts/[^/]+/party"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "Party": {
+              "PartyId": "wire_party_{{randomValue length=20 type='ALPHANUMERIC'}}",
+              "PartyNumber": "471160",
+              "PartyType": "Joint",
+              "Name": "WireMock Test Account Holder",
+              "EmailAddress": "test@wiremock.local",
+              "Phone": "+6499999999",
+              "Mobile": "+64211234567",
+              "Address": [
+                {
+                  "AddressType": "Residential",
+                  "AddressLine": ["1 WireMock Lane", "Apt 42"],
+                  "StreetName": "WireMock",
+                  "BuildingNumber": "1",
+                  "PostCode": "6011",
+                  "TownName": "Wellington",
+                  "CountrySubDivision": "Wellington",
+                  "Country": "NZ"
+                }
+              ]
+            }
+          },
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": { "TotalPages": 1 }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/party"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "Party": {
+              "PartyId": "wire_party_{{randomValue length=20 type='ALPHANUMERIC'}}",
+              "PartyNumber": "471160",
+              "PartyType": "Joint",
+              "Name": "WireMock Test Account Holder",
+              "EmailAddress": "test@wiremock.local",
+              "Phone": "+6499999999",
+              "Mobile": "+64211234567",
+              "Address": [
+                {
+                  "AddressType": "Residential",
+                  "AddressLine": ["1 WireMock Lane", "Apt 42"],
+                  "StreetName": "WireMock",
+                  "BuildingNumber": "1",
+                  "PostCode": "6011",
+                  "TownName": "Wellington",
+                  "CountrySubDivision": "Wellington",
+                  "Country": "NZ"
+                }
+              ]
+            }
+          },
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": { "TotalPages": 1 }
+        },
+        "transformers": ["response-template"]
+      }
+    }
+  ]
+}

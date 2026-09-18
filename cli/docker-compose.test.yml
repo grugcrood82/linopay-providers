@@ -1,0 +1,53 @@
+# Containerized test stack for @linotech/cli.
+#
+# SOW §2.6 canonical invocation:
+#   docker compose -f cli/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from cli-tests
+#   docker compose -f cli/docker-compose.test.yml down -v
+#
+# This stack stands up a WireMock (with the LinoPay-API mappings),
+# builds the SDK and CLI inside the test image, and runs vitest with
+# `LINOPAY_E2E_BASE_URL` set so the integration tests included in
+# `tests/example-e2e.test.ts` (the `linopay init` then `linopay
+# verify` round-trip) actually exercise the surface.
+
+name: linotech-cli-test
+
+services:
+  wiremock:
+    image: wiremock/wiremock:3.9.1
+    container_name: linotech-cli-wiremock
+    command: ["--global-response-templating", "--verbose", "--port", "8080"]
+    ports:
+      - "18081:8080"
+    volumes:
+      - ../test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  cli-tests:
+    build:
+      context: ..
+      dockerfile: cli/Dockerfile
+    container_name: linotech-cli-tests
+    depends_on:
+      wiremock:
+        condition: service_healthy
+    environment:
+      # 1) The verified round-trip. The SDK + CLI tests in
+      #    tests/example-e2e.test.ts only run when this is set; on a
+      #    developer machine without WireMock, the unit tests still
+      #    pass and these are skipped.
+      LINOPAY_E2E_BASE_URL: "http://wiremock:8080"
+      # 2) Static values the e2e test parses from `init`'s output and
+      #    feeds to `verify`. The key id is arbitrary — WireMock
+      #    doesn't check it; the path must match the e2e's `pemPath`
+      #    variable so verify succeeds.
+      LINOPAY_KEY_ID: "kid_demo"
+      LINOPAY_ENVIRONMENT: "sandbox"
+      LINOPAY_PRIVATE_KEY_PEM_PATH: "/sdk/.test-key.pem"
+      LINOPAY_BANK_CODE: "ANZ"
+    command: ["npm", "run", "test"]
