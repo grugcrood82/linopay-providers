@@ -29,6 +29,11 @@ on:
 
 jobs:
   test:
+    # The PHP SDK ships in Phase 2. Until that branch lands in main,
+    # the php/ directory may be empty on the current HEAD. Skip the
+    # job cleanly with a friendly notice instead of failing on a
+    # missing docker-compose.test.yml.
+    if: hashFiles('php/docker-compose.test.yml') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
