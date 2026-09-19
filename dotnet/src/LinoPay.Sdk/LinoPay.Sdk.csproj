@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>LinoPay.Sdk</RootNamespace>
+    <AssemblyName>LinoPay.Sdk</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <PackageId>LinoPay.Sdk</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>LinoTech Ltd.</Authors>
+    <Description>Official LinoPay .NET SDK. Methods on payments, invoices (Flexi-Payment, pay-now), channel key status, and outbound webhook signature verification. Mirrors the @linotech/sdk surface.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>linopay;payments;open-banking;ciba;pnz</PackageTags>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.7.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,52 @@
+# Containerised test stack for @linotech/dotnet-sdk.
+#
+# SOW §2.6 canonical invocation:
+#   docker compose -f dotnet/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from dotnet-tests
+#   docker compose -f dotnet/docker-compose.test.yml down -v
+#
+# Stands up WireMock with the LinoPay-API mappings, builds the SDK,
+# then runs `dotnet test` against it. The exit code from `dotnet-tests`
+# is propagated; --abort-on-container-exit means a failing test run
+# tears the stack down rather than leaving a running wiremock hanging.
+
+name: linotech-dotnet-test
+
+services:
+  wiremock:
+    image: wiremock/wiremock:3.9.1
+    container_name: linotech-dotnet-wiremock
+    command: ["--global-response-templating", "--verbose", "--port", "8080"]
+    ports:
+      - "18082:8080"
+    volumes:
+      - ../test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
+    healthcheck:
+      # The WireMock image responds on any URL it has a stub for. The
+      # /healthz endpoint is mapped at priority 99 in
+      # test-infra/wiremock/linopay/mappings/linopay.json. wget returns
+      # 0 when it sees a 2xx response, non-zero otherwise.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/healthz && exit 0 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+  dotnet-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linotech-dotnet-tests
+    depends_on:
+      wiremock:
+        condition: service_healthy
+    environment:
+      # 1) xUnit skips `[SkippableFact]` cases when this is unset; the
+      #    docker-compose test stack turns them into real assertions
+      #    against the WireMock upstream.
+      LINOPAY_E2E_BASE_URL: "http://wiremock:8080"
+      # 2) The e2e test writes a fresh PEM to this path if it doesn't
+      #    already exist; doesn't need to exist beforehand.
+      LINOPAY_E2E_PEM_PATH: "/tmp/test-key.pem"
+    volumes:
+      - ./test-results:/src/test-results
+    command: ["bash", "-c", "cd tests/LinoPay.Sdk.Tests && dotnet test --no-build --configuration Debug --logger 'console;verbosity=detailed' --logger 'trx;LogFileName=/src/test-results/TestResults.trx' --nologo 2>&1 | tee /src/test-results/test-output.log; echo TESTS_EXIT_CODE=$?"]
