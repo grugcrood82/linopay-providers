@@ -2,6 +2,7 @@
   "name": "linotech/sdk",
   "description": "Official LinoPay PHP SDK. Merchant-facing surface — payments, invoices (Flexi-Payment pay-now), channel key status, and outbound webhook signature verification. Mirrors @linotech/sdk field-for-field; idiomatic casing only.",
   "type": "library",
+  "version": "0.1.0",
   "license": "MIT",
   "keywords": ["linopay", "payments", "open-banking", "ciba", "pnz"],
   "require": {
@@ -18,7 +19,14 @@
     "psr-4": {
       "Linotech\\Sdk\\": "src/"
     },
-    "classmap": ["src/Errors.php", "src/PaymentsClient.php", "src/InvoicesClient.php", "src/ChannelsClient.php", "src/ChannelTokenCache.php"]
+    "classmap": [
+      "src/Errors.php",
+      "src/PaymentsClient.php",
+      "src/InvoicesClient.php",
+      "src/ChannelsClient.php",
+      "src/ChannelTokenCache.php",
+      "src/Config.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

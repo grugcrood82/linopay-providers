@@ -1,0 +1,47 @@
+name: woocommerce-plugin-ci
+
+# WooCommerce plugin test pipeline (Phase 2 part 2).
+#
+# Runs the pure-PHP unit suite inside a containerised stack:
+# wiremock + phpunit. No WordPress required (the unit suite is
+# pure PHP). The WordPress + WooCommerce smoke profile is built
+# behind `--profile smoke` for daily / pre-merge runs (see
+# `woocommerce-plugin/README.md`); we don't run it on every PR
+# because of the mariadb-client / mariadb-server SSL mismatch
+# documented in the README.
+#
+# Canonical local invocation (per SOW §2.6):
+#   docker compose -f woocommerce-plugin/docker-compose.test.yml \
+#     --profile unit up --build --abort-on-container-exit \
+#     --exit-code-from php-unit-tests
+#   docker compose -f woocommerce-plugin/docker-compose.test.yml down -v
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'woocommerce-plugin/**'
+      - 'php/**'
+      - 'test-infra/**'
+      - '.github/workflows/woocommerce-plugin-ci.yml'
+  pull_request:
+    paths:
+      - 'woocommerce-plugin/**'
+      - 'php/**'
+      - 'test-infra/**'
+      - '.github/workflows/woocommerce-plugin-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build + run PHP unit test stack
+        run: |
+          docker compose -f woocommerce-plugin/docker-compose.test.yml \
+            --profile unit up --build --abort-on-container-exit \
+            --exit-code-from php-unit-tests
+      - name: Tear down PHP stack
+        if: always()
+        run: docker compose -f woocommerce-plugin/docker-compose.test.yml --profile unit down -v

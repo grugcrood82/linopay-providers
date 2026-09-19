@@ -1,0 +1,47 @@
+{
+  "name": "linotech/woocommerce",
+  "description": "WooCommerce payment-gateway plugin for LinoPay. Wraps the linotech/sdk (Phase 2 part 1) PHP SDK; merchants configure a channel key + encrypted PEM in WooCommerce → Settings → Payments; webhooks complete orders automatically. License: GPL-2.0-or-later (the WP plugin directory requires it). The bundled linotech/sdk dependency is MIT — MIT is GPL-compatible.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "keywords": ["linopay", "woocommerce", "payment-gateway", "open-banking", "ciba", "pnz"],
+  "require": {
+    "php": "^8.1",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "linotech/sdk": "0.1.*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../php",
+      "options": {
+        "symlink": false
+      }
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Linopay\\WooCommerce\\": "src/"
+    },
+    "classmap": ["src/Crypto.php", "src/Gateway.php", "src/OrderLookupResult.php", "src/Settings.php", "src/WebhookHandler.php", "src/WPLogger.php"]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Linopay\\WooCommerce\\Tests\\": "tests/Unit/"
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  },
+  "scripts": {
+    "test": "phpunit --testdox",
+    "lint": "php -l src/"
+  },
+  "minimum-stability": "stable"
+}
