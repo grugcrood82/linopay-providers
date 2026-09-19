@@ -1,0 +1,15 @@
+# Build artefacts
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Test artefacts
+TestResults/
+test-results/
+
+# Transcripts dropped in CWD by `dotnet test` debug sessions
+result.txt
+test-output.log
