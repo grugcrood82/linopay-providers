@@ -19,13 +19,13 @@ services:
     ports:
       - "18083:8080"
     volumes:
-      # Pinned to a Windows-friendly absolute path so the volume
-      # mount under Windows hosts isn't stripped by Docker's
-      # drive-colon handling. The SDK's tests can also reach the
-      # WireMock host on `wiremock:8080` directly via the compose
-      # network — the volume mount is only for loading the
-      # mapping files.
-      - C:/Users/ibind/source/repos/linopay-providers/test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
+      # Relative path so the same compose file works on Windows hosts
+      # (Drive-colon absolute paths break on Linux CI runners) and on
+      # the GitHub Actions ubuntu-latest runner. Compose resolves the
+      # path against the directory containing this file (php/), so
+      # `../test-infra/wiremock/linopay/mappings` lands on the same
+      # mapping fixtures regardless of where the repo is cloned.
+      - ../test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/healthz && exit 0 || exit 1"]
       interval: 3s
