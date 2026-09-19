@@ -33,7 +33,6 @@ on:
 
 jobs:
   test:
-    if: hashFiles('woocommerce-plugin/docker-compose.test.yml') != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
