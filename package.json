@@ -1,0 +1,17 @@
+{
+  "name": "linopay-providers",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Public, open-source home for the LinoPay merchant SDKs, CLI, and platform plugins. This is the monorepo root; see child folders (node/, cli/, ...) for actual deliverables.",
+  "license": "MIT",
+  "workspaces": [
+    "node",
+    "cli"
+  ],
+  "scripts": {
+    "test:node": "npm --workspace @linotech/sdk test",
+    "test:cli": "npm --workspace @linotech/cli test",
+    "build:node": "npm --workspace @linotech/sdk run build",
+    "build:cli": "npm --workspace @linotech/cli run build"
+  }
+}

@@ -12,18 +12,34 @@ a header layout and a contract against the same upstream APIs.
 
 | Folder | Audience | Status |
 |--------|----------|--------|
-| [`node/`](./node)         | TypeScript / Node.js merchants | Phase 1 |
-| [`cli/`](./cli)           | Anyone who wants a 5-minute terminal integration | Phase 1 |
+| [`node/`](./node)         | TypeScript / Node.js merchants | Phase 1 — shipped |
+| [`cli/`](./cli)           | Anyone who wants a 5-minute terminal integration | Phase 1 — shipped |
 | [`php/`](./php)           | PHP merchants | Phase 2 |
 | [`woocommerce-plugin/`](./woocommerce-plugin) | WooCommerce store owners (no code) | Phase 2 |
 | [`python/`](./python)     | Python merchants | Phase 3 |
 | [`dotnet/`](./dotnet)     | .NET merchants | Phase 4 |
 | [`test-infra/`](./test-infra) | Shared WireMock sandbox for unattended CI | All phases |
+| [`docs/SOW.md`](./docs/SOW.md) | The full statement of work driving this roadmap | Reference |
 
-Each folder has its own `README.md` with the language-specific install /
-quickstart, and its own `docker-compose.test.yml` so the verification
-loop is `docker compose up --build --abort-on-container-exit` —
-nothing manual, no real credentials required.
+Each shipped folder has its own `README.md` with the language-specific
+install / quickstart, and its own `docker-compose.test.yml` so the
+verification loop is `docker compose up --build --abort-on-container-exit`
+— nothing manual, no real credentials required.
+
+## Install a Phase 1 deliverable
+
+```bash
+# Node.js / TypeScript SDK
+npm install @linotech/sdk
+
+# 5-minute terminal CLI
+curl -fsSL https://raw.githubusercontent.com/grugcrood82/linopay-providers/main/cli/install/install.sh | sh
+```
+
+```powershell
+# Windows
+iwr -useb https://raw.githubusercontent.com/grugcrood82/linopay-providers/main/cli/install/install.ps1 | iex
+```
 
 ## Relationship to `lime-payments`
 

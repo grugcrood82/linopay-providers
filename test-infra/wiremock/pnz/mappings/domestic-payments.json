@@ -1,0 +1,200 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/domestic-payment-consents"
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "ConsentId": "dpc_{{randomValue length=20 type='ALPHANUMERIC'}}",
+            "CreationDateTime": "{{now}}",
+            "Status": "AwaitingAuthorisation",
+            "StatusUpdateDateTime": "{{now}}"
+          },
+          "Risk": {},
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": {}
+        },
+        "transformers": ["response-template"],
+        "fixedDelayMilliseconds": 50
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/oauth/v2\\.0/token",
+        "bodyPatterns": [
+          {
+            "matches": "(?s).*grant_type=(client_credentials|authorization_code|urn%3Aopenid%3Aparams%3Agrant-type%3Aciba).*"
+          }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "access_token": "wire_at_{{randomValue length=32 type='ALPHANUMERIC'}}",
+          "id_token": "wire_it.{{randomValue length=20 type='ALPHANUMERIC'}}.{{randomValue length=20 type='ALPHANUMERIC'}}.{{randomValue length=20 type='ALPHANUMERIC'}}",
+          "token_type": "Bearer",
+          "expires_in": 3599,
+          "refresh_token": "wire_rt_{{randomValue length=32 type='ALPHANUMERIC'}}",
+          "scope": "openid accounts payments"
+        },
+        "transformers": ["response-template"],
+        "fixedDelayMilliseconds": 50
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/domestic-payments"
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "DomesticPaymentId": "wire_dpmt_{{randomValue length=20 type='ALPHANUMERIC'}}",
+            "ConsentId": "{{request.body 'Data.ConsentId' 'unknown'}}",
+            "CreationDateTime": "{{now}}",
+            "Status": "Pending",
+            "StatusUpdateDateTime": "{{now}}",
+            "Initiation": "{{request.body 'Data.Initiation' '{}'}}"
+          },
+          "Risk": "{{request.body 'Risk' '{}'}}",
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": {}
+        },
+        "transformers": ["response-template"],
+        "fixedDelayMilliseconds": 100
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/domestic-payments/[^/]+"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "DomesticPaymentId": "{{request.pathSegments.[4]}}",
+            "ConsentId": "wire_con_{{randomValue length=20 type='ALPHANUMERIC'}}",
+            "CreationDateTime": "{{now}}",
+            "Status": "AcceptedSettlementCompleted",
+            "StatusUpdateDateTime": "{{now}}"
+          },
+          "Risk": {},
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": {}
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/.well-known/openid-configuration"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "issuer": "{{request.url}}",
+          "authorization_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/authorize",
+          "token_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/token",
+          "introspection_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/introspect",
+          "revocation_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/revoke",
+          "backchannel_authentication_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/bc-authorize",
+          "jwks_uri": "{{request.scheme}}://{{request.host}}/oauth/v2.0/keys",
+          "userinfo_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/userinfo",
+          "pushed_authorization_request_endpoint": "{{request.scheme}}://{{request.host}}/oauth/v2.0/par",
+          "scopes_supported": ["openid", "accounts", "payments"],
+          "response_types_supported": ["code id_token", "code"],
+          "grant_types_supported": ["authorization_code", "refresh_token", "client_credentials", "urn:openid:params:grant-type:ciba"],
+          "subject_types_supported": ["pairwise"],
+          "tls_client_certificate_bound_access_tokens": true,
+          "require_signed_request_object": true,
+          "claims_supported": ["ConsentId", "acr", "sub", "https://www.apicentre.paymentsnz.co.nz/refresh_token_expires_at", "auth_time"],
+          "authorization_signing_alg_values_supported": ["PS512"]
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "urlPath": "/oauth/v2.0/keys"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "keys": [
+            {
+              "kid": "wire_jwk_ps512",
+              "kty": "RSA",
+              "alg": "PS512",
+              "use": "sig",
+              "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86z",
+              "e": "AQAB"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/oauth/v2\\.0/bc-authorize"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "auth_req_id": "wire_ar_{{randomValue length=20 type='ALPHANUMERIC'}}",
+          "expires_in": 3599,
+          "interval": 2
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "urlPathPattern": "/open-banking-nz/v?[\\d.]+/account-access-consents"
+      },
+      "response": {
+        "status": 201,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "Data": {
+            "ConsentId": "wire_aac_{{randomValue length=24 type='ALPHANUMERIC'}}",
+            "CreationDateTime": "{{now}}",
+            "Status": "AwaitingAuthorisation",
+            "StatusUpdateDateTime": "{{now}}"
+          },
+          "Risk": {},
+          "Links": { "Self": "{{request.url}}" },
+          "Meta": {}
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "request": {
+        "method": "PUT",
+        "urlPathPattern": "/middleware-nz-sandbox/v2\\.0/data/mutation/approve-ciba-consent/[^/]+"
+      },
+      "response": {
+        "status": 204,
+        "headers": {}
+      }
+    }
+  ]
+}

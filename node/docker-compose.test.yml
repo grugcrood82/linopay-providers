@@ -1,0 +1,43 @@
+# Containerized test stack for @linotech/sdk.
+#
+# SOW §2.6 canonical invocation:
+#   docker compose -f node/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from node-tests
+#   docker compose -f node/docker-compose.test.yml down -v
+#
+# Brings up a single WireMock container with the LinoPay-API mappings
+# from `test-infra/wiremock/linopay/`, then runs the SDK test suite
+# against it. The `node-tests` service is the one whose exit code is
+# propagated -- abort-on-container-exit means a non-zero test run
+# tears the stack down rather than leaving a running wiremock hanging
+# around.
+
+name: linotech-sdk-test
+
+services:
+  wiremock:
+    image: wiremock/wiremock:3.9.1
+    container_name: linotech-sdk-wiremock
+    command: ["--global-response-templating", "--verbose", "--port", "8080"]
+    ports:
+      - "18080:8080"   # local-only port mapping so a developer can poke at WireMock from a browser too
+    volumes:
+      - ../test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  node-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linotech-sdk-tests
+    depends_on:
+      wiremock:
+        condition: service_healthy
+    environment:
+      LINOPAY_E2E_BASE_URL: "http://wiremock:8080"
+      LINOPAY_E2E_PEM_PATH: "/tmp/test-key.pem"
+    command: ["npm", "run", "test"]
