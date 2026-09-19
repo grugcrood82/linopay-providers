@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         failOnWarning="false">
+
+  <testsuites>
+    <!-- The default unit suite: everything in tests/ except the e2e
+         file. Run via `vendor/bin/phpunit` or
+         `vendor/bin/phpunit testsuite=unit`. -->
+    <testsuite name="unit">
+      <directory>tests</directory>
+      <exclude>tests/EndToEndTest.php</exclude>
+    </testsuite>
+    <!-- Live-WireMock integration tests. Run via
+         `vendor/bin/phpunit testsuite=e2e` (only inside the docker
+         container, where the WireMock host is reachable). -->
+    <testsuite name="e2e">
+      <file>tests/EndToEndTest.php</file>
+    </testsuite>
+  </testsuites>
+
+  <source>
+    <include>
+      <directory>src</directory>
+    </include>
+  </source>
+
+  <php>
+    <env name="LINOPAY_E2E_BASE_URL" value=""/>
+    <env name="LINOPAY_E2E_PEM_PATH" value=""/>
+  </php>
+</phpunit>
