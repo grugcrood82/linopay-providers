@@ -1,0 +1,47 @@
+# Containerised test stack for @linotech/php-sdk.
+#
+# SOW §2.6 canonical invocation:
+#   docker compose -f php/docker-compose.test.yml up \
+#     --build --abort-on-container-exit --exit-code-from php-tests
+#   docker compose -f php/docker-compose.test.yml down -v
+#
+# Brings up wiremock (with the LinoPay-API mappings) and runs the full
+# PHPUnit suite against it, including the e2e group (gated on
+# LINOPAY_E2E_BASE_URL). The php-tests exit code is propagated.
+
+name: linotech-php-test
+
+services:
+  wiremock:
+    image: wiremock/wiremock:3.9.1
+    container_name: linotech-php-wiremock
+    command: ["--global-response-templating", "--verbose", "--port", "8080"]
+    ports:
+      - "18083:8080"
+    volumes:
+      # Pinned to a Windows-friendly absolute path so the volume
+      # mount under Windows hosts isn't stripped by Docker's
+      # drive-colon handling. The SDK's tests can also reach the
+      # WireMock host on `wiremock:8080` directly via the compose
+      # network — the volume mount is only for loading the
+      # mapping files.
+      - C:/Users/ibind/source/repos/linopay-providers/test-infra/wiremock/linopay/mappings:/home/wiremock/mappings:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/healthz && exit 0 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+
+  php-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linotech-php-tests
+    depends_on:
+      wiremock:
+        condition: service_healthy
+    environment:
+      # The e2e group becomes real assertions against the wiremock host.
+      LINOPAY_E2E_BASE_URL: "http://wiremock:8080"
+      LINOPAY_E2E_PEM_PATH: "/tmp/test-key.pem"
+    command: ["vendor/bin/phpunit", "--testdox"]
